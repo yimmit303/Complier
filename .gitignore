@@ -1,5 +1,6 @@
 #We don't need the visual studio files in the github
 .vs/
+.vscode/
 
 
 # Godot-specific ignores
