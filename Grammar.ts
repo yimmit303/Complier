@@ -2,42 +2,47 @@
 
 export class Grammar
 {
-    regex_list: RegExp[] = [];
-    symbol_list: string[] = [];
-
-    private checkRegex(regex:string)
-    {
-        let rex = new RegExp(regex);
-        this.regex_list.push(rex);
-    }
+    mTerminalList: Terminal[] = []
 
     constructor( grammar:string )
     {
+        this.mTerminalList.push(new Terminal("WHITESPACE", new RegExp(/(\s|\n)+/gy)));
+        this.mTerminalList.push(new Terminal("COMMENT", new RegExp(/\/\*(.|\n)*?\*\//gy)));
+
         let expressions: string[] = grammar.split("\n");
         for(var i = 0; i < expressions.length; i++)
         {
             if(expressions[i].length > 0)
             {
-                if (expressions[i].split(" ").length != 3)
+                let expression = expressions[i].split("->");
+                let symbol = expression[0].trim();
+                let regex = expression[1].trim();
+                if (expression.length != 2)
                 {
-                    //console.log("Invalid Production Error with production: " + expressions[i])
-                    throw new Error("The production is the wrong length")
+                    throw new Error("The production is the wrong length");
                 }
-
-                if (expressions[i].split(" ")[1] != "->")
+                
+                for(var j = 0; j < this.mTerminalList.length; j++)
                 {
-                    //console.log("Invalid Production Error with production: " + expressions[i])
-                    throw new Error("Invalid production format")
+                    if(this.mTerminalList[i].mSymbol == expression[0])
+                    {
+                        throw new Error("Duplicate Symbol");
+                    }
                 }
-
-                if (this.symbol_list.includes(expressions[i].split(" ")[0]))
-                {
-                   // console.log("Duplicate Symbol Error");
-                    throw new Error("Duplicate Symbol")
-                }
-                this.symbol_list.push(expressions[i].split(" ")[0]);
-                this.checkRegex(expressions[i].split(" ")[2]);
+                this.mTerminalList.push(new Terminal(symbol, new RegExp(regex, 'gy')));
             }
         }
+    }
+}
+
+class Terminal
+{
+    mSymbol: string;
+    mRegex: RegExp;
+
+    constructor(symbol: string, regex: RegExp)
+    {
+        this.mSymbol = symbol;
+        this.mRegex = regex;
     }
 }
