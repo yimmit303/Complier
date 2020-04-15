@@ -1,7 +1,6 @@
 import { Grammar } from "./Grammar";
 import { TreeNode } from "./TreeNode";
 
-let operandStack: 
 
 export function parse(input: string){
 
