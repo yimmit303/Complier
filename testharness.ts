@@ -30,7 +30,8 @@ function main(){
 function testWithFile(fname:string): boolean{
     let data:string = fs.readFileSync(fname,"utf8");
     let lst = data.split(/\n/g);
-    for(let i=0;i<lst.length;++i){
+    for(let i=0;i<lst.length;++i)
+    {
         let line = lst[i].trim();
         if( line.length === 0 )
             continue;
@@ -71,7 +72,8 @@ function treesAreSame( n1: any, n2:any ){
 }
     
 function dumpTree(fname: string, root: any){
-     function walk(n: any, callback: any){
+     function walk(n: any, callback: any)
+     {
         callback(n);
         n.children.forEach( (x:any) => {
             walk(x,callback);

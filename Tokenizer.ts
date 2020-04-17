@@ -7,17 +7,25 @@ export class Tokenizer
     mIdx: number = 0;
     mCurrentLine : number = 1;
     mGrammar: Grammar = null;
+    mPreviousTokens: Token[] = [];
+    mAtEnd: boolean = false;
 
     constructor( grammar: Grammar )
     {
         this.mGrammar = grammar;
         this.mCurrentLine = 1;
         this.mIdx = 0;
+        this.mPreviousTokens = [];
+        this.mAtEnd = false;
     }
 
     setInput( inputData: string )
     {
         this.mInputData = inputData
+        this.mCurrentLine = 1;
+        this.mIdx = 0;
+        this.mPreviousTokens = [];
+        this.mAtEnd = false;
     }
     
     next(): Token 
@@ -26,8 +34,8 @@ export class Tokenizer
         {
             //special "end of file" metatoken
             let eof = new Token("$", undefined, this.mCurrentLine);
-            this.mCurrentLine = 1;
-            this.mIdx = 0;
+
+            this.mAtEnd = true;
             return eof;
         }
         
@@ -47,6 +55,10 @@ export class Tokenizer
                 {
                     let tok = new Token(sym, lexeme, this.mCurrentLine);
                     this.mCurrentLine += (m[0].match(/\n/g)||[]).length;
+                    if (this.mPreviousTokens.push(tok) == 3)
+                    {
+                        this.mPreviousTokens.shift();
+                    }
                     return tok;
                 }
                 else
@@ -60,5 +72,16 @@ export class Tokenizer
         //no match; syntax error
         throw new Error("Syntax Error");
     }
+
+    previous(): Token
+    {
+        return this.mPreviousTokens[0];
+    }
+
+    atEnd(): Boolean
+    {
+        return this.mAtEnd;
+    }
+
 
 }

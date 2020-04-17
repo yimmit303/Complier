@@ -1,12 +1,20 @@
 import { Token } from "./Token";
 
 export class TreeNode{
-    sym: string;
+    sym: String;
     token: Token;
     children: TreeNode[];
-    constructor(sym: string, token: Token){
+    NUMBER: number;
+    
+    constructor(sym: String, token: Token)
+    {
         this.sym = sym;
         this.token = token;
         this.children = [];
+    }
+
+    addChild(child: TreeNode)
+    {
+        this.children.push(child);
     }
 }

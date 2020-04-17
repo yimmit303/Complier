@@ -6,19 +6,26 @@ var Tokenizer = /** @class */ (function () {
         this.mIdx = 0;
         this.mCurrentLine = 1;
         this.mGrammar = null;
+        this.mPreviousTokens = [];
+        this.mAtEnd = false;
         this.mGrammar = grammar;
         this.mCurrentLine = 1;
         this.mIdx = 0;
+        this.mPreviousTokens = [];
+        this.mAtEnd = false;
     }
     Tokenizer.prototype.setInput = function (inputData) {
         this.mInputData = inputData;
+        this.mCurrentLine = 1;
+        this.mIdx = 0;
+        this.mPreviousTokens = [];
+        this.mAtEnd = false;
     };
     Tokenizer.prototype.next = function () {
         if (this.mIdx >= this.mInputData.length) {
             //special "end of file" metatoken
             var eof = new Token_1.Token("$", undefined, this.mCurrentLine);
-            this.mCurrentLine = 1;
-            this.mIdx = 0;
+            this.mAtEnd = true;
             return eof;
         }
         for (var i = 0; i < this.mGrammar.mTerminalList.length; ++i) {
@@ -34,6 +41,9 @@ var Tokenizer = /** @class */ (function () {
                 if (sym !== "WHITESPACE" && sym !== "COMMENT") {
                     var tok = new Token_1.Token(sym, lexeme, this.mCurrentLine);
                     this.mCurrentLine += (m[0].match(/\n/g) || []).length;
+                    if (this.mPreviousTokens.push(tok) == 3) {
+                        this.mPreviousTokens.shift();
+                    }
                     return tok;
                 }
                 else {
@@ -45,6 +55,12 @@ var Tokenizer = /** @class */ (function () {
         }
         //no match; syntax error
         throw new Error("Syntax Error");
+    };
+    Tokenizer.prototype.previous = function () {
+        return this.mPreviousTokens[0];
+    };
+    Tokenizer.prototype.atEnd = function () {
+        return this.mAtEnd;
     };
     return Tokenizer;
 }());
