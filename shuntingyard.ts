@@ -41,10 +41,6 @@ function init()
     associativity.set("POWOP", "right");
     arity.set("POWOP", 2);
 
-    precedence.set("LPAREN", -1);
-    associativity.set("LPAREN", "none");
-    arity.set("LPAREN", 2);
-
     precedence.set("func-call", 4);
     associativity.set("func-call", "left");
     arity.set("func-call", 2);
@@ -113,6 +109,10 @@ export function parse(input: string): TreeNode
                 }
                 doOperation();
             }
+        }
+        else if(sym === "LPAREN")
+        {
+            operatorStack.push(new TreeNode("LPAREN", new Token("LPAREN", "(", t.line)))
         }
         else
         {
