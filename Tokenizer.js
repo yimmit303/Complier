@@ -22,6 +22,7 @@ var Tokenizer = /** @class */ (function () {
         this.mAtEnd = false;
     };
     Tokenizer.prototype.next = function () {
+        // console.log("T.next() call at idx ", this.mIdx)
         if (this.mIdx >= this.mInputData.length) {
             //special "end of file" metatoken
             var eof = new Token_1.Token("$", undefined, this.mCurrentLine);
@@ -44,6 +45,7 @@ var Tokenizer = /** @class */ (function () {
                     if (this.mPreviousTokens.push(tok) == 3) {
                         this.mPreviousTokens.shift();
                     }
+                    // console.log("\t", tok)
                     return tok;
                 }
                 else {
@@ -56,11 +58,36 @@ var Tokenizer = /** @class */ (function () {
         //no match; syntax error
         throw new Error("Syntax Error");
     };
+    Tokenizer.prototype.expect = function (expected) {
+        var actual_token = this.next();
+        if (actual_token.sym != expected) {
+            var error_string = "ERROR - Expected: " + expected + " - Got: " + actual_token.sym + " at line: " + actual_token.line;
+            throw new Error(error_string);
+        }
+        return actual_token;
+    };
     Tokenizer.prototype.previous = function () {
         return this.mPreviousTokens[0];
     };
     Tokenizer.prototype.atEnd = function () {
         return this.mAtEnd;
+    };
+    Tokenizer.prototype.peek = function () {
+        var previous_idx = this.mIdx;
+        var previous_line = this.mCurrentLine;
+        var peeked_token = this.next();
+        this.mIdx = previous_idx;
+        this.mCurrentLine = previous_line;
+        return peeked_token;
+    };
+    Tokenizer.prototype.peek2 = function () {
+        var previous_idx = this.mIdx;
+        var previous_line = this.mCurrentLine;
+        var peeked_token = this.next();
+        peeked_token = this.next();
+        this.mIdx = previous_idx;
+        this.mCurrentLine = previous_line;
+        return peeked_token;
     };
     return Tokenizer;
 }());

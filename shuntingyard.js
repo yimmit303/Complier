@@ -46,13 +46,13 @@ function init() {
     gtext += "POWOP -> [*][*]\n";
     gtext += "MULOP -> [*/]\n";
     gtext += "BITNOT -> [~]\n";
-    gtext += "LPAREN -> [(]\n";
-    gtext += "RPAREN -> [)]\n";
+    gtext += "LP -> [(]\n";
+    gtext += "RP -> [)]\n";
     gtext += "COMMA -> [,]\n";
     grammar = new Grammar_1.Grammar(gtext);
     tokenizer = new Tokenizer_1.Tokenizer(grammar);
 }
-function parse(input) {
+function expr_parse(input) {
     init();
     tokenizer.setInput(input);
     while (tokenizer.atEnd() == false) {
@@ -60,7 +60,7 @@ function parse(input) {
         // console.log("This is the token ", t);
         if (t.lexeme == "-") {
             var prev = tokenizer.previous();
-            if (prev == null || prev.sym == "LPAREN" || prev.sym.endsWith("OP") || prev.sym == "NEGATE") {
+            if (prev == null || prev.sym == "LP" || prev.sym.endsWith("OP") || prev.sym == "NEGATE") {
                 t.sym = "NEGATE";
             }
         }
@@ -73,20 +73,20 @@ function parse(input) {
         }
         else if (sym === "func-call") {
             operandStack.push(new TreeNode_1.TreeNode("ID", new Token_1.Token("ID", t.lexeme.replace("(", ""), t.line)));
-            operatorStack.push(new TreeNode_1.TreeNode("LPAREN", new Token_1.Token("LPAREN", "(", t.line)));
+            operatorStack.push(new TreeNode_1.TreeNode("LP", new Token_1.Token("LPAREN", "(", t.line)));
             operatorStack.push(new TreeNode_1.TreeNode("func-call", new Token_1.Token("func-call", "", t.line)));
         }
-        else if (sym === "RPAREN") {
+        else if (sym === "RP") {
             while (true) {
-                if (operatorStack[operatorStack.length - 1].sym === "LPAREN") {
+                if (operatorStack[operatorStack.length - 1].sym === "LP") {
                     operatorStack.pop();
                     break;
                 }
                 doOperation();
             }
         }
-        else if (sym === "LPAREN") {
-            operatorStack.push(new TreeNode_1.TreeNode("LPAREN", new Token_1.Token("LPAREN", "(", t.line)));
+        else if (sym === "LP") {
+            operatorStack.push(new TreeNode_1.TreeNode("LP", new Token_1.Token("LP", "(", t.line)));
         }
         else {
             var assoc = associativity.get(sym);
@@ -118,7 +118,7 @@ function parse(input) {
     // console.log(node);
     return node;
 }
-exports.parse = parse;
+exports.expr_parse = expr_parse;
 function doOperation() {
     var opNode = operatorStack.pop();
     var c1 = operandStack.pop();

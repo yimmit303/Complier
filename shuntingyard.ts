@@ -57,8 +57,8 @@ function init()
     gtext += "POWOP -> [*][*]\n";
     gtext += "MULOP -> [*/]\n";
     gtext += "BITNOT -> [~]\n";
-    gtext += "LPAREN -> [(]\n";
-    gtext += "RPAREN -> [)]\n";
+    gtext += "LP -> [(]\n";
+    gtext += "RP -> [)]\n";
     gtext += "COMMA -> [,]\n";
 
 
@@ -66,7 +66,7 @@ function init()
     tokenizer = new Tokenizer(grammar);
 }
 
-export function parse(input: string): TreeNode
+export function expr_parse(input: string): TreeNode
 {
     init();
     tokenizer.setInput(input);
@@ -78,7 +78,7 @@ export function parse(input: string): TreeNode
         if (t.lexeme == "-")
         {           
             let prev = tokenizer.previous();
-            if (prev == null || prev.sym == "LPAREN" || prev.sym.endsWith("OP") ||  prev.sym == "NEGATE")
+            if (prev == null || prev.sym == "LP" || prev.sym.endsWith("OP") ||  prev.sym == "NEGATE")
             {
                 t.sym = "NEGATE";
             }
@@ -95,14 +95,14 @@ export function parse(input: string): TreeNode
         else if(sym === "func-call")
         {
             operandStack.push(new TreeNode("ID", new Token("ID", t.lexeme.replace("(", ""), t.line)))
-            operatorStack.push(new TreeNode("LPAREN", new Token("LPAREN", "(", t.line)))
+            operatorStack.push(new TreeNode("LP", new Token("LPAREN", "(", t.line)))
             operatorStack.push(new TreeNode("func-call", new Token("func-call", "", t.line)))
         }
-        else if(sym === "RPAREN")
+        else if(sym === "RP")
         {
             while(true)
             {
-                if (operatorStack[operatorStack.length - 1].sym === "LPAREN")
+                if (operatorStack[operatorStack.length - 1].sym === "LP")
                 {
                     operatorStack.pop();
                     break;
@@ -110,9 +110,9 @@ export function parse(input: string): TreeNode
                 doOperation();
             }
         }
-        else if(sym === "LPAREN")
+        else if(sym === "LP")
         {
-            operatorStack.push(new TreeNode("LPAREN", new Token("LPAREN", "(", t.line)))
+            operatorStack.push(new TreeNode("LP", new Token("LP", "(", t.line)))
         }
         else
         {

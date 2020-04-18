@@ -30,6 +30,7 @@ export class Tokenizer
     
     next(): Token 
     {
+        // console.log("T.next() call at idx ", this.mIdx)
         if(this.mIdx >= this.mInputData.length)
         {
             //special "end of file" metatoken
@@ -59,6 +60,7 @@ export class Tokenizer
                     {
                         this.mPreviousTokens.shift();
                     }
+                    // console.log("\t", tok)
                     return tok;
                 }
                 else
@@ -73,6 +75,17 @@ export class Tokenizer
         throw new Error("Syntax Error");
     }
 
+    expect(expected: string): Token
+    {
+        let actual_token = this.next();
+        if (actual_token.sym != expected)
+        {
+            let error_string = "ERROR - Expected: " + expected + " - Got: " + actual_token.sym + " at line: " + actual_token.line;
+            throw new Error(error_string);
+        }
+        return actual_token;
+    }
+
     previous(): Token
     {
         return this.mPreviousTokens[0];
@@ -83,5 +96,24 @@ export class Tokenizer
         return this.mAtEnd;
     }
 
+    peek(): Token
+    {
+        var previous_idx = this.mIdx;
+        var previous_line = this.mCurrentLine;
+        var peeked_token: Token = this.next();
+        this.mIdx = previous_idx;
+        this.mCurrentLine = previous_line;
+        return peeked_token;
+    }
 
+    peek2(): Token
+    {
+        var previous_idx = this.mIdx;
+        var previous_line = this.mCurrentLine;
+        var peeked_token: Token = this.next();
+        peeked_token = this.next();
+        this.mIdx = previous_idx;
+        this.mCurrentLine = previous_line;
+        return peeked_token;
+    }
 }
