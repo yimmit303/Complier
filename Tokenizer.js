@@ -21,10 +21,9 @@ var Tokenizer = /** @class */ (function () {
             this.mIdx = 0;
             return eof;
         }
-        for (var i = 0; i < this.mGrammar.mTerminalList.length; ++i) {
-            var terminal = this.mGrammar.mTerminalList[i];
-            var sym = terminal.mSymbol;
-            var rex = terminal.mRegex; //RegExp
+        for (var _i = 0, _a = Array.from(this.mGrammar.mProductions.keys()); _i < _a.length; _i++) {
+            var sym = _a[_i];
+            var rex = this.mGrammar.mProductions.get(sym); //RegExp
             rex.lastIndex = this.mIdx; //tell where to start searching
             var m = rex.exec(this.mInputData); //do the search
             if (m) {

@@ -31,11 +31,9 @@ export class Tokenizer
             return eof;
         }
         
-        for(let i = 0; i < this.mGrammar.mTerminalList.length; ++i)
+        for(let sym of Array.from(this.mGrammar.mProductions.keys()))
         {
-            let terminal = this.mGrammar.mTerminalList[i];
-            let sym = terminal.mSymbol;
-            let rex = terminal.mRegex;     //RegExp
+            let rex = this.mGrammar.mProductions.get(sym);     //RegExp
             rex.lastIndex = this.mIdx;   //tell where to start searching
             let m = rex.exec(this.mInputData);   //do the search
             if(m)
