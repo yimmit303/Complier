@@ -18,6 +18,7 @@ var Grammar = /** @class */ (function () {
         this.mProductions = new Map();
         this.mSymbols = new Set();
         this.mNonTerminatorSymbols = new Array();
+        this.mStartSymbol = null;
         var doing_nonterminators = false; // This variable keeps track of which side of the single newline character we are on
         var mUsedSymbols = new Set();
         this.mProductions.set("WHITESPACE", new RegExp(/(\s|\n)+/, 'gy'));
@@ -49,6 +50,9 @@ var Grammar = /** @class */ (function () {
                 this.mProductions.set(expression[0], new RegExp(expression[1].replace("lambda", "")));
                 this.mSymbols.add(expression[0]);
                 if (doing_nonterminators) {
+                    if (this.mStartSymbol == null) {
+                        this.mStartSymbol = expression[0];
+                    }
                     this.mNonTerminatorSymbols.push(expression[0]);
                 }
             }
@@ -172,24 +176,17 @@ var Grammar = /** @class */ (function () {
                     var nonterminal = _h.value;
                     var production_list = this.mProductions.get(nonterminal).source.split("|");
                     try {
-                        // console.log("Nonterminal: ", nonterminal, "Prodcution list: ", production_list);
                         for (var production_list_2 = (e_5 = void 0, __values(production_list)), production_list_2_1 = production_list_2.next(); !production_list_2_1.done; production_list_2_1 = production_list_2.next()) {
                             var production = production_list_2_1.value;
                             production = production.trim();
-                            // console.log(production);
                             var symbol_list = production.split(" ");
                             try {
-                                // console.log("Symbol_list", symbol_list);
                                 for (var symbol_list_1 = (e_6 = void 0, __values(symbol_list)), symbol_list_1_1 = symbol_list_1.next(); !symbol_list_1_1.done; symbol_list_1_1 = symbol_list_1.next()) {
                                     var symbol = symbol_list_1_1.value;
                                     if (symbol.length > 0) {
-                                        // console.log(nonterminal, symbol);
                                         var pre_list = new Set();
                                         first.get(nonterminal).forEach(pre_list.add, pre_list);
-                                        // console.log("B: ", first.get(nonterminal), pre_list);
                                         first.set(nonterminal, set_concatnation(first.get(nonterminal), first.get(symbol)));
-                                        // console.log("A: ", first.get(nonterminal), pre_list);
-                                        // console.log(set_compare(first.get(nonterminal), pre_list));
                                         if (set_compare(first.get(nonterminal), pre_list) == false) {
                                             stable = false;
                                         }
@@ -227,6 +224,91 @@ var Grammar = /** @class */ (function () {
         }
         return first;
     };
+    Grammar.prototype.getFollow = function () {
+        var e_7, _a, e_8, _b, e_9, _c;
+        var nullable = this.getNullable();
+        var first = this.getFirst();
+        var follow = new Map();
+        try {
+            for (var _d = __values(this.mSymbols), _e = _d.next(); !_e.done; _e = _d.next()) {
+                var symbol = _e.value;
+                if (this.mNonTerminatorSymbols.includes(symbol)) {
+                    follow.set(symbol, new Set());
+                }
+            }
+        }
+        catch (e_7_1) { e_7 = { error: e_7_1 }; }
+        finally {
+            try {
+                if (_e && !_e.done && (_a = _d["return"])) _a.call(_d);
+            }
+            finally { if (e_7) throw e_7.error; }
+        }
+        follow.set(this.mStartSymbol, new Set(["$"]));
+        var stable = false;
+        while (!stable) {
+            stable = true;
+            try {
+                for (var _f = (e_8 = void 0, __values(this.mNonTerminatorSymbols)), _g = _f.next(); !_g.done; _g = _f.next()) {
+                    var nonterminal = _g.value;
+                    var production_list = this.mProductions.get(nonterminal).source.split("|");
+                    try {
+                        for (var production_list_3 = (e_9 = void 0, __values(production_list)), production_list_3_1 = production_list_3.next(); !production_list_3_1.done; production_list_3_1 = production_list_3.next()) {
+                            var production = production_list_3_1.value;
+                            var symbol_list = production.trim().split(" ");
+                            for (var i = 0; i < symbol_list.length; i++) {
+                                var symbol = symbol_list[i];
+                                if (symbol.length > 0) {
+                                    if (this.mNonTerminatorSymbols.includes(symbol)) {
+                                        var broke_out = false;
+                                        for (var j = i + 1; j < symbol_list.length; j++) {
+                                            var other_symbol = symbol_list[j];
+                                            var pre_list = new Set();
+                                            follow.get(symbol).forEach(pre_list.add, pre_list);
+                                            // follow[symbol] = union(follow[symbol],first[other_symbol])
+                                            follow.set(symbol, set_concatnation(follow.get(symbol), first.get(other_symbol)));
+                                            if (set_compare(follow.get(symbol), pre_list) == false) {
+                                                stable = false;
+                                            }
+                                            if (!nullable.has(other_symbol)) {
+                                                broke_out = true;
+                                                break;
+                                            }
+                                        }
+                                        if (broke_out == false) {
+                                            var pre_list = new Set();
+                                            follow.get(symbol).forEach(pre_list.add, pre_list);
+                                            // follow[symbol] = union(follow[nonterminal],follow[symbol])
+                                            follow.set(symbol, set_concatnation(follow.get(nonterminal), follow.get(symbol)));
+                                            if (set_compare(follow.get(symbol), pre_list) == false) {
+                                                stable = false;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                    finally {
+                        try {
+                            if (production_list_3_1 && !production_list_3_1.done && (_c = production_list_3["return"])) _c.call(production_list_3);
+                        }
+                        finally { if (e_9) throw e_9.error; }
+                    }
+                }
+            }
+            catch (e_8_1) { e_8 = { error: e_8_1 }; }
+            finally {
+                try {
+                    if (_g && !_g.done && (_b = _f["return"])) _b.call(_f);
+                }
+                finally { if (e_8) throw e_8.error; }
+            }
+        }
+        // console.log("My follow: ", follow);
+        return follow;
+    };
     return Grammar;
 }());
 exports.Grammar = Grammar;
@@ -238,28 +320,42 @@ var Production = /** @class */ (function () {
     return Production;
 }());
 function set_concatnation(set1, set2) {
-    var e_7, _a;
+    var e_10, _a, e_11, _b;
+    var ret_set = new Set();
+    try {
+        for (var set1_1 = __values(set1), set1_1_1 = set1_1.next(); !set1_1_1.done; set1_1_1 = set1_1.next()) {
+            var set1_string = set1_1_1.value;
+            ret_set.add(set1_string);
+        }
+    }
+    catch (e_10_1) { e_10 = { error: e_10_1 }; }
+    finally {
+        try {
+            if (set1_1_1 && !set1_1_1.done && (_a = set1_1["return"])) _a.call(set1_1);
+        }
+        finally { if (e_10) throw e_10.error; }
+    }
     try {
         for (var set2_1 = __values(set2), set2_1_1 = set2_1.next(); !set2_1_1.done; set2_1_1 = set2_1.next()) {
             var set2_string = set2_1_1.value;
-            set1.add(set2_string);
+            ret_set.add(set2_string);
         }
     }
-    catch (e_7_1) { e_7 = { error: e_7_1 }; }
+    catch (e_11_1) { e_11 = { error: e_11_1 }; }
     finally {
         try {
-            if (set2_1_1 && !set2_1_1.done && (_a = set2_1["return"])) _a.call(set2_1);
+            if (set2_1_1 && !set2_1_1.done && (_b = set2_1["return"])) _b.call(set2_1);
         }
-        finally { if (e_7) throw e_7.error; }
+        finally { if (e_11) throw e_11.error; }
     }
-    return set1;
+    return ret_set;
 }
 function set_compare(set1, set2) {
     if (set1.size != set2.size) {
         return false;
     }
     for (var i = 0; i < set1.size; i++) {
-        if (Array.from(set1)[i] != Array.from(set2)[i]) {
+        if (Array.from(set1).sort()[i] != Array.from(set2).sort()[i]) {
             return false;
         }
     }

@@ -6,6 +6,7 @@ export class Grammar
     mSymbols: Set<string>;
     mInput: string;
     mNonTerminatorSymbols: Array<string>;
+    mStartSymbol: string;
 
     constructor(input: string) 
     {
@@ -14,6 +15,7 @@ export class Grammar
         this.mProductions = new Map<string, RegExp>();
         this.mSymbols = new Set<string>();
         this.mNonTerminatorSymbols = new Array<string>();
+        this.mStartSymbol = null;
 
         var doing_nonterminators = false; // This variable keeps track of which side of the single newline character we are on
         var mUsedSymbols: Set<string> = new Set<string>();
@@ -44,6 +46,7 @@ export class Grammar
             // Allowing for the easy concatonation of regexes
             else if (this.mProductions.has(expression[0]) && doing_nonterminators == true)
             {
+
                 var tmprex = this.get_rex(expression[0]).source;
                 tmprex = (tmprex + " | " + expression[1]).replace("lambda", "");
                 this.mProductions.set(expression[0], new RegExp(tmprex));
@@ -55,6 +58,10 @@ export class Grammar
                 this.mSymbols.add(expression[0]);
                 if (doing_nonterminators) 
                 { 
+                    if (this.mStartSymbol == null)
+                    {
+                        this.mStartSymbol = expression[0];
+                    }
                     this.mNonTerminatorSymbols.push(expression[0]); 
                 }
             }
@@ -176,24 +183,17 @@ export class Grammar
             for (let nonterminal of this.mNonTerminatorSymbols)
             {
                 let production_list = this.mProductions.get(nonterminal).source.split("|");
-                // console.log("Nonterminal: ", nonterminal, "Prodcution list: ", production_list);
                 for (let production of production_list)
                 {
                     production = production.trim();
-                    // console.log(production);
                     let symbol_list = production.split(" ");
-                    // console.log("Symbol_list", symbol_list);
                     for (let symbol of symbol_list)
                     {
                         if (symbol.length > 0)
                         {
-                            // console.log(nonterminal, symbol);
                             let pre_list = new Set<string>();
                             first.get(nonterminal).forEach(pre_list.add, pre_list);
-                            // console.log("B: ", first.get(nonterminal), pre_list);
                             first.set(nonterminal, set_concatnation(first.get(nonterminal), first.get(symbol)));
-                            // console.log("A: ", first.get(nonterminal), pre_list);
-                            // console.log(set_compare(first.get(nonterminal), pre_list));
                             if(set_compare(first.get(nonterminal), pre_list) == false)
                             {
                                 stable = false;
@@ -208,6 +208,76 @@ export class Grammar
             }
         }
         return first;
+    }
+
+    getFollow(): Map<string, Set<string>>
+    {
+        let nullable = this.getNullable();
+        let first = this.getFirst();
+        let follow = new Map<string, Set<string>>();
+        for(let symbol of this.mSymbols)
+        {
+            if(this.mNonTerminatorSymbols.includes(symbol))
+            {
+                follow.set(symbol, new Set<string>());
+            }
+        }
+        follow.set(this.mStartSymbol, new Set<string>(["$"]));
+        let stable: boolean = false;
+        while( !stable)
+        {
+            stable = true;
+            for (let nonterminal of this.mNonTerminatorSymbols)
+            {
+                let production_list = this.mProductions.get(nonterminal).source.split("|");
+                for (let production of production_list)
+                {
+                    let symbol_list = production.trim().split(" ");
+                    for (let i = 0; i < symbol_list.length; i++)
+                    {
+                        let symbol = symbol_list[i];
+                        if (symbol.length > 0)
+                        {
+                            if(this.mNonTerminatorSymbols.includes(symbol))
+                            {
+                                let broke_out = false;
+                                for (let j = i+1; j < symbol_list.length; j++)
+                                {
+                                    let other_symbol = symbol_list[j]
+                                    let pre_list = new Set<string>();
+                                    follow.get(symbol).forEach(pre_list.add, pre_list);
+                                    // follow[symbol] = union(follow[symbol],first[other_symbol])
+                                    follow.set(symbol, set_concatnation(follow.get(symbol), first.get(other_symbol)));
+                                    if(set_compare(follow.get(symbol), pre_list) == false)
+                                    {
+                                        stable = false;
+                                    }
+                                    if (!nullable.has(other_symbol))
+                                    {
+                                        broke_out = true;
+                                        break
+                                    }
+                                }
+                                if (broke_out == false)
+                                {
+                                    let pre_list = new Set<string>();
+                                    follow.get(symbol).forEach(pre_list.add, pre_list);
+                                    // follow[symbol] = union(follow[nonterminal],follow[symbol])
+                                    follow.set(symbol, set_concatnation(follow.get(nonterminal), follow.get(symbol)));
+                                    if(set_compare(follow.get(symbol), pre_list) == false)
+                                    {
+                                        stable = false;
+                                    }
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // console.log("My follow: ", follow);
+        return follow;
     }
 }
 
@@ -225,11 +295,16 @@ class Production
 
 function set_concatnation(set1: Set<string> , set2: Set<string>): Set<string>
 {
+    let ret_set = new Set<string>();
+    for(let set1_string of set1)
+    {
+        ret_set.add(set1_string);
+    }
     for(let set2_string of set2)
     {
-        set1.add(set2_string);
+        ret_set.add(set2_string);
     }
-    return set1;
+    return ret_set;
 }
 
 function set_compare(set1: Set<string>, set2: Set<string>): boolean
@@ -240,7 +315,7 @@ function set_compare(set1: Set<string>, set2: Set<string>): boolean
     }
     for(let i = 0; i < set1.size; i++)
     {
-        if(Array.from(set1)[i] != Array.from(set2)[i])
+        if(Array.from(set1).sort()[i] != Array.from(set2).sort()[i])
         {
             return false;
         }
