@@ -152,6 +152,63 @@ export class Grammar
         nullable.delete("");
         return nullable;
     }
+
+    getFirst(): Map<string, Set<string>>
+    {
+        let first = new Map<string, Set<string>>();
+        for(let symbol of this.mSymbols)
+        {
+            if(!this.mNonTerminatorSymbols.includes(symbol))
+            {
+                first.set(symbol, new Set<string>([symbol]));
+            }
+            else
+            {
+                first.set(symbol, new Set<string>());
+            }
+
+        }
+        let nullable: Set<string> = this.getNullable();
+        let stable = false;
+        while(!stable)
+        {
+            stable = true;
+            for (let nonterminal of this.mNonTerminatorSymbols)
+            {
+                let production_list = this.mProductions.get(nonterminal).source.split("|");
+                // console.log("Nonterminal: ", nonterminal, "Prodcution list: ", production_list);
+                for (let production of production_list)
+                {
+                    production = production.trim();
+                    // console.log(production);
+                    let symbol_list = production.split(" ");
+                    // console.log("Symbol_list", symbol_list);
+                    for (let symbol of symbol_list)
+                    {
+                        if (symbol.length > 0)
+                        {
+                            // console.log(nonterminal, symbol);
+                            let pre_list = new Set<string>();
+                            first.get(nonterminal).forEach(pre_list.add, pre_list);
+                            // console.log("B: ", first.get(nonterminal), pre_list);
+                            first.set(nonterminal, set_concatnation(first.get(nonterminal), first.get(symbol)));
+                            // console.log("A: ", first.get(nonterminal), pre_list);
+                            // console.log(set_compare(first.get(nonterminal), pre_list));
+                            if(set_compare(first.get(nonterminal), pre_list) == false)
+                            {
+                                stable = false;
+                            }
+                            if (!nullable.has(symbol))
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return first;
+    }
 }
 
 class Production
@@ -164,4 +221,29 @@ class Production
         this.mSymbol = symbol;
         this.mRegex = regex;
     }
+}
+
+function set_concatnation(set1: Set<string> , set2: Set<string>): Set<string>
+{
+    for(let set2_string of set2)
+    {
+        set1.add(set2_string);
+    }
+    return set1;
+}
+
+function set_compare(set1: Set<string>, set2: Set<string>): boolean
+{
+    if(set1.size != set2.size)
+    {
+        return false;
+    }
+    for(let i = 0; i < set1.size; i++)
+    {
+        if(Array.from(set1)[i] != Array.from(set2)[i])
+        {
+            return false;
+        }
+    }
+    return true;
 }

@@ -1,4 +1,15 @@
 "use strict";
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 exports.__esModule = true;
 var Grammar = /** @class */ (function () {
     function Grammar(input) {
@@ -79,38 +90,142 @@ var Grammar = /** @class */ (function () {
         return this.mProductions.get(symbol);
     };
     Grammar.prototype.getNullable = function () {
+        var e_1, _a, e_2, _b;
         var nullable = new Set();
         nullable.add("");
         var stable = false;
         while (!stable) {
             stable = true;
-            // console.log(this.mNonTerminatorSymbols);
-            for (var _i = 0, _a = this.mNonTerminatorSymbols; _i < _a.length; _i++) {
-                var nonterminal = _a[_i];
-                if (!nullable.has(nonterminal)) {
-                    var production_list = this.mProductions.get(nonterminal).source.split("|");
-                    // console.log("Nonterminal: ", nonterminal, "Prodcution list: ", production_list);
-                    for (var _b = 0, production_list_1 = production_list; _b < production_list_1.length; _b++) {
-                        var production = production_list_1[_b];
-                        production = production.trim();
-                        // console.log(production);
-                        var symbol_list = production.split(" ");
-                        // console.log("Symbol_list", symbol_list);
-                        var allNullable = symbol_list.every(function (sym) {
-                            return nullable.has(sym);
-                        });
-                        if (allNullable) {
-                            if (!nullable.has(nonterminal)) {
-                                stable = false;
-                                nullable.add(nonterminal); // = union( nullable , N )
+            try {
+                // console.log(this.mNonTerminatorSymbols);
+                for (var _c = (e_1 = void 0, __values(this.mNonTerminatorSymbols)), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var nonterminal = _d.value;
+                    if (!nullable.has(nonterminal)) {
+                        var production_list = this.mProductions.get(nonterminal).source.split("|");
+                        try {
+                            // console.log("Nonterminal: ", nonterminal, "Prodcution list: ", production_list);
+                            for (var production_list_1 = (e_2 = void 0, __values(production_list)), production_list_1_1 = production_list_1.next(); !production_list_1_1.done; production_list_1_1 = production_list_1.next()) {
+                                var production = production_list_1_1.value;
+                                production = production.trim();
+                                // console.log(production);
+                                var symbol_list = production.split(" ");
+                                // console.log("Symbol_list", symbol_list);
+                                var allNullable = symbol_list.every(function (sym) {
+                                    return nullable.has(sym);
+                                });
+                                if (allNullable) {
+                                    if (!nullable.has(nonterminal)) {
+                                        stable = false;
+                                        nullable.add(nonterminal); // = union( nullable , N )
+                                    }
+                                }
                             }
+                        }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        finally {
+                            try {
+                                if (production_list_1_1 && !production_list_1_1.done && (_b = production_list_1["return"])) _b.call(production_list_1);
+                            }
+                            finally { if (e_2) throw e_2.error; }
                         }
                     }
                 }
             }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_a = _c["return"])) _a.call(_c);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
         }
         nullable["delete"]("");
         return nullable;
+    };
+    Grammar.prototype.getFirst = function () {
+        var e_3, _a, e_4, _b, e_5, _c, e_6, _d;
+        var first = new Map();
+        try {
+            for (var _e = __values(this.mSymbols), _f = _e.next(); !_f.done; _f = _e.next()) {
+                var symbol = _f.value;
+                if (!this.mNonTerminatorSymbols.includes(symbol)) {
+                    first.set(symbol, new Set([symbol]));
+                }
+                else {
+                    first.set(symbol, new Set());
+                }
+            }
+        }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (_f && !_f.done && (_a = _e["return"])) _a.call(_e);
+            }
+            finally { if (e_3) throw e_3.error; }
+        }
+        var nullable = this.getNullable();
+        var stable = false;
+        while (!stable) {
+            stable = true;
+            try {
+                for (var _g = (e_4 = void 0, __values(this.mNonTerminatorSymbols)), _h = _g.next(); !_h.done; _h = _g.next()) {
+                    var nonterminal = _h.value;
+                    var production_list = this.mProductions.get(nonterminal).source.split("|");
+                    try {
+                        // console.log("Nonterminal: ", nonterminal, "Prodcution list: ", production_list);
+                        for (var production_list_2 = (e_5 = void 0, __values(production_list)), production_list_2_1 = production_list_2.next(); !production_list_2_1.done; production_list_2_1 = production_list_2.next()) {
+                            var production = production_list_2_1.value;
+                            production = production.trim();
+                            // console.log(production);
+                            var symbol_list = production.split(" ");
+                            try {
+                                // console.log("Symbol_list", symbol_list);
+                                for (var symbol_list_1 = (e_6 = void 0, __values(symbol_list)), symbol_list_1_1 = symbol_list_1.next(); !symbol_list_1_1.done; symbol_list_1_1 = symbol_list_1.next()) {
+                                    var symbol = symbol_list_1_1.value;
+                                    if (symbol.length > 0) {
+                                        // console.log(nonterminal, symbol);
+                                        var pre_list = new Set();
+                                        first.get(nonterminal).forEach(pre_list.add, pre_list);
+                                        // console.log("B: ", first.get(nonterminal), pre_list);
+                                        first.set(nonterminal, set_concatnation(first.get(nonterminal), first.get(symbol)));
+                                        // console.log("A: ", first.get(nonterminal), pre_list);
+                                        // console.log(set_compare(first.get(nonterminal), pre_list));
+                                        if (set_compare(first.get(nonterminal), pre_list) == false) {
+                                            stable = false;
+                                        }
+                                        if (!nullable.has(symbol)) {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                            finally {
+                                try {
+                                    if (symbol_list_1_1 && !symbol_list_1_1.done && (_d = symbol_list_1["return"])) _d.call(symbol_list_1);
+                                }
+                                finally { if (e_6) throw e_6.error; }
+                            }
+                        }
+                    }
+                    catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                    finally {
+                        try {
+                            if (production_list_2_1 && !production_list_2_1.done && (_c = production_list_2["return"])) _c.call(production_list_2);
+                        }
+                        finally { if (e_5) throw e_5.error; }
+                    }
+                }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (_h && !_h.done && (_b = _g["return"])) _b.call(_g);
+                }
+                finally { if (e_4) throw e_4.error; }
+            }
+        }
+        return first;
     };
     return Grammar;
 }());
@@ -122,3 +237,31 @@ var Production = /** @class */ (function () {
     }
     return Production;
 }());
+function set_concatnation(set1, set2) {
+    var e_7, _a;
+    try {
+        for (var set2_1 = __values(set2), set2_1_1 = set2_1.next(); !set2_1_1.done; set2_1_1 = set2_1.next()) {
+            var set2_string = set2_1_1.value;
+            set1.add(set2_string);
+        }
+    }
+    catch (e_7_1) { e_7 = { error: e_7_1 }; }
+    finally {
+        try {
+            if (set2_1_1 && !set2_1_1.done && (_a = set2_1["return"])) _a.call(set2_1);
+        }
+        finally { if (e_7) throw e_7.error; }
+    }
+    return set1;
+}
+function set_compare(set1, set2) {
+    if (set1.size != set2.size) {
+        return false;
+    }
+    for (var i = 0; i < set1.size; i++) {
+        if (Array.from(set1)[i] != Array.from(set2)[i]) {
+            return false;
+        }
+    }
+    return true;
+}
