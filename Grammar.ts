@@ -269,7 +269,6 @@ export class Grammar
                                         stable = false;
                                     }
                                 }
-                                
                             }
                         }
                     }
