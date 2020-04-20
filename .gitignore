@@ -1,6 +1,8 @@
 #We don't need the visual studio files in the github
 .vs/
 .vscode/
+.antlr4/
+
 
 
 # Godot-specific ignores
@@ -8,7 +10,6 @@
 export.cfg
 export_presets.cfg
 antlr-4.8-complete.jar
-.antlr4/
 
 # Mono-specific ignores
 .mono/
