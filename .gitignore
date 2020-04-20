@@ -1,6 +1,7 @@
 #We don't need the visual studio files in the github
 .vs/
 .vscode/
+antlr4/
 antlr-4.8-complete
 antlr-4.8-complete.jar
 antlr4/atn/ATN.js
