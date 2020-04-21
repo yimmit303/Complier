@@ -1,8 +1,8 @@
 
 export class Token
 {
-    sym : String = "";
-    lexeme : String = "";
+    sym : string = "";
+    lexeme : string = "";
     line : number = 1;
 
     constructor(sym:string, lexeme:string, line:number){
