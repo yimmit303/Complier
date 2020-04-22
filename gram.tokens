@@ -48,6 +48,6 @@ WHITESPACE=31
 'print'=24
 'input'=25
 'open'=26
-'bread'=27
+'read'=27
 'write'=28
 'close'=29
